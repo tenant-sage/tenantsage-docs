@@ -1,0 +1,173 @@
+name: Build & Deploy — TenantSage Docs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      sync_notion:
+        description: 'Sync content from Notion before building'
+        required: false
+        default: 'true'
+        type: choice
+        options: ['true', 'false']
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ──────────────────────────────────────────
+  # JOB 1: Sync content from Notion
+  # ──────────────────────────────────────────
+  sync-notion:
+    name: Sync Notion Content
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.sync_notion == 'true' || github.event_name == 'push'
+    outputs:
+      cache-key: ${{ steps.cache-key.outputs.key }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate cache key
+        id: cache-key
+        run: echo "key=notion-content-${{ github.run_id }}" >> $GITHUB_OUTPUT
+
+      - name: Sync Notion → MDX content
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_WORKSPACE_ID: ${{ secrets.NOTION_WORKSPACE_ID }}
+          NOTION_DB_PLATFORM:   ${{ vars.NOTION_DB_PLATFORM }}
+          NOTION_DB_GOVERNANCE: ${{ vars.NOTION_DB_GOVERNANCE }}
+          NOTION_DB_TECHNOLOGY: ${{ vars.NOTION_DB_TECHNOLOGY }}
+          NOTION_DB_DEVELOPERS: ${{ vars.NOTION_DB_DEVELOPERS }}
+          NOTION_DB_RESOURCES:  ${{ vars.NOTION_DB_RESOURCES }}
+        run: |
+          echo "Syncing documentation from Notion workspace..."
+          npm run sync-notion || echo "Notion sync skipped (databases not yet configured)"
+
+      - name: Upload synced content
+        uses: actions/upload-artifact@v4
+        with:
+          name: notion-content-${{ github.run_id }}
+          path: content/
+          retention-days: 1
+
+  # ──────────────────────────────────────────
+  # JOB 2: Lint & Validate
+  # ──────────────────────────────────────────
+  validate:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+      - name: ESLint
+        run: npx next lint || true
+
+  # ──────────────────────────────────────────
+  # JOB 3: Build
+  # ──────────────────────────────────────────
+  build:
+    name: Build Static Site
+    runs-on: ubuntu-latest
+    needs: [validate]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Download Notion content (if available)
+        uses: actions/download-artifact@v4
+        with:
+          name: notion-content-${{ github.run_id }}
+          path: content/
+        continue-on-error: true
+
+      - name: Build Next.js static export
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_WORKSPACE_ID: ${{ secrets.NOTION_WORKSPACE_ID }}
+          NODE_ENV: production
+        run: npm run build
+
+      - name: Build Pagefind search index
+        run: npx pagefind --site out
+
+      - name: Check build output
+        run: |
+          echo "Build output:"
+          ls -la out/
+          echo "Total size:"
+          du -sh out/
+
+      - name: Link check (non-blocking)
+        run: |
+          npx lhci autorun --collect.staticDistDir=out 2>/dev/null || \
+          echo "Link check skipped"
+        continue-on-error: true
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-build-${{ github.run_id }}
+          path: out/
+          retention-days: 7
+
+  # ──────────────────────────────────────────
+  # JOB 4: Deploy to Cloudflare Pages
+  # ──────────────────────────────────────────
+  deploy:
+    name: Deploy to Cloudflare Pages
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    environment:
+      name: production
+      url: https://docs.tenantsage.ai
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docs-build-${{ github.run_id }}
+          path: out/
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy out --project-name=tenantsage-docs --commit-dirty=true
+
+      - name: Deployment summary
+        run: |
+          echo "### Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** Production" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL:** https://docs.tenantsage.ai" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY

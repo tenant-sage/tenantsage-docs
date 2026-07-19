@@ -1,0 +1,211 @@
+/* =========================================================
+   TenantSage Documentation Portal — Design Tokens
+   Art direction: Enterprise AI Governance → authoritative, precise
+   Palette: deep navy primary (#0F172A), electric blue accent (#2563EB)
+   Typography: Geist (display) + Inter (body) + JetBrains Mono (code)
+   Density: balanced — spacious prose, dense sidebar nav
+   ========================================================= */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Google Fonts ── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
+
+/* ── Type Scale ── */
+:root {
+  --text-xs:   clamp(0.75rem,  0.7rem  + 0.25vw, 0.875rem);
+  --text-sm:   clamp(0.875rem, 0.8rem  + 0.35vw, 1rem);
+  --text-base: clamp(1rem,     0.95rem + 0.25vw, 1.125rem);
+  --text-lg:   clamp(1.125rem, 1rem    + 0.75vw, 1.5rem);
+  --text-xl:   clamp(1.5rem,   1.2rem  + 1.25vw, 2.25rem);
+  --text-2xl:  clamp(2rem,     1.2rem  + 2.5vw,  3.5rem);
+
+  /* Spacing */
+  --space-1: 0.25rem;  --space-2: 0.5rem;   --space-3: 0.75rem;
+  --space-4: 1rem;     --space-5: 1.25rem;  --space-6: 1.5rem;
+  --space-8: 2rem;     --space-10: 2.5rem;  --space-12: 3rem;
+  --space-16: 4rem;    --space-20: 5rem;    --space-24: 6rem;
+
+  /* Radius */
+  --radius-sm: 0.25rem;  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;   --radius-xl: 0.75rem;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Fonts */
+  --font-display: 'Geist', 'Inter', system-ui, sans-serif;
+  --font-body:    'Inter', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Content widths */
+  --content-narrow:  640px;
+  --content-default: 960px;
+  --content-wide:    1280px;
+  --sidebar-width:   260px;
+  --toc-width:       220px;
+}
+
+/* ── Light Mode (TenantSage Brand) ── */
+:root, [data-theme="light"] {
+  --ts-bg:           #FFFFFF;
+  --ts-surface:      #F8FAFC;
+  --ts-surface-2:    #F1F5F9;
+  --ts-surface-3:    #E2E8F0;
+  --ts-border:       #E2E8F0;
+  --ts-border-faint: oklch(from #0F172A l c h / 0.08);
+
+  --ts-text:         #0F172A;
+  --ts-text-muted:   #475569;
+  --ts-text-faint:   #94A3B8;
+  --ts-text-inverse: #FFFFFF;
+
+  --ts-primary:      #0F172A;
+  --ts-accent:       #2563EB;
+  --ts-accent-hover: #1D4ED8;
+  --ts-accent-light: #EFF6FF;
+  --ts-success:      #16A34A;
+  --ts-warning:      #F59E0B;
+  --ts-danger:       #DC2626;
+
+  --shadow-sm: 0 1px 2px oklch(0.2 0.05 240 / 0.06);
+  --shadow-md: 0 4px 12px oklch(0.2 0.05 240 / 0.08);
+  --shadow-lg: 0 12px 32px oklch(0.2 0.05 240 / 0.12);
+}
+
+/* ── Dark Mode ── */
+[data-theme="dark"] {
+  --ts-bg:           #020617;
+  --ts-surface:      #0F172A;
+  --ts-surface-2:    #1E293B;
+  --ts-surface-3:    #334155;
+  --ts-border:       #1E293B;
+  --ts-border-faint: oklch(from #E2E8F0 l c h / 0.08);
+
+  --ts-text:         #F1F5F9;
+  --ts-text-muted:   #94A3B8;
+  --ts-text-faint:   #475569;
+  --ts-text-inverse: #0F172A;
+
+  --ts-primary:      #F1F5F9;
+  --ts-accent:       #3B82F6;
+  --ts-accent-hover: #60A5FA;
+  --ts-accent-light: #1E3A5F;
+  --ts-success:      #22C55E;
+  --ts-warning:      #FBBF24;
+  --ts-danger:       #F87171;
+
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.25);
+  --shadow-md: 0 4px 12px oklch(0 0 0 / 0.35);
+  --shadow-lg: 0 12px 32px oklch(0 0 0 / 0.45);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --ts-bg:           #020617;
+    --ts-surface:      #0F172A;
+    --ts-surface-2:    #1E293B;
+    --ts-surface-3:    #334155;
+    --ts-border:       #1E293B;
+    --ts-border-faint: oklch(from #E2E8F0 l c h / 0.08);
+    --ts-text:         #F1F5F9;
+    --ts-text-muted:   #94A3B8;
+    --ts-text-faint:   #475569;
+    --ts-text-inverse: #0F172A;
+    --ts-primary:      #F1F5F9;
+    --ts-accent:       #3B82F6;
+    --ts-accent-hover: #60A5FA;
+    --ts-accent-light: #1E3A5F;
+    --ts-success:      #22C55E;
+    --ts-warning:      #FBBF24;
+    --ts-danger:       #F87171;
+    --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.25);
+    --shadow-md: 0 4px 12px oklch(0 0 0 / 0.35);
+    --shadow-lg: 0 12px 32px oklch(0 0 0 / 0.45);
+  }
+}
+
+/* ── Base Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: var(--space-16);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  hanging-punctuation: first last;
+}
+
+body {
+  min-height: 100dvh;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: 1.7;
+  color: var(--ts-text);
+  background-color: var(--ts-bg);
+  transition: background-color var(--transition), color var(--transition);
+}
+
+img, picture, video, canvas, svg { display: block; max-width: 100%; height: auto; }
+ul[role="list"], ol[role="list"] { list-style: none; }
+input, button, textarea, select { font: inherit; color: inherit; }
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  text-wrap: balance;
+  line-height: 1.2;
+  color: var(--ts-text);
+}
+
+p, li { text-wrap: pretty; max-width: 72ch; }
+
+code, pre, kbd { font-family: var(--font-mono); }
+
+::selection {
+  background: oklch(from var(--ts-accent) l c h / 0.2);
+  color: var(--ts-text);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ts-accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+a, button, [role="button"] {
+  transition: color var(--transition), background var(--transition),
+              border-color var(--transition), box-shadow var(--transition);
+}
+
+button { cursor: pointer; background: none; border: none; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border-width: 0;
+}
+
+/* ── Syntax Highlighting (base) ── */
+.hljs { background: var(--ts-surface-2) !important; border-radius: var(--radius-lg); }
+
+/* ── Pagefind Search UI ── */
+:root {
+  --pagefind-ui-scale: 0.9;
+  --pagefind-ui-primary: var(--ts-accent);
+  --pagefind-ui-text: var(--ts-text);
+  --pagefind-ui-background: var(--ts-surface);
+  --pagefind-ui-border: var(--ts-border);
+  --pagefind-ui-tag: var(--ts-surface-2);
+}
