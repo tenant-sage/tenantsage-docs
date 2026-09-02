@@ -36,10 +36,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Install dependencies
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       - name: Generate cache key
         id: cache-key
@@ -76,8 +76,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-      - run: npm ci
+          cache: 'yarn'
+      - run: yarn install --frozen-lockfile
       - name: TypeScript type check
         run: npx tsc --noEmit
       - name: ESLint
